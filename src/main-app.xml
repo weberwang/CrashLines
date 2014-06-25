@@ -15,7 +15,7 @@
 
 	<!-- A universally unique application identifier. Must be unique across all AIR applications.
 	Using a reverse DNS-style name as the id is recommended. (Eg. com.example.ExampleApplication.) Required. -->
-	<id>Crash-Lines</id>
+	<id>CrashLines</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>main</filename>
@@ -89,7 +89,7 @@
 
         <!-- The aspect ratio of the app ("portrait" or "landscape" or "any"). Optional. Mobile only. Default is the natural orientation of the device -->
 
-        <!-- <aspectRatio></aspectRatio> -->
+        <!-- <aspectRatio>portrait</aspectRatio> -->
 
         <!-- Whether the app will begin auto-orienting on launch. Optional. Mobile only. Default false -->
 
@@ -111,10 +111,11 @@
 
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, OSX-only. Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
-	<autoOrients>true</autoOrients>
+	<autoOrients>false</autoOrients>
         <fullScreen>true</fullScreen>
         <visible>true</visible>
         <renderMode>direct</renderMode>
+        <aspectRatio>landscape</aspectRatio>
     </initialWindow>
 
 	<!-- We recommend omitting the supportedProfiles element, -->
