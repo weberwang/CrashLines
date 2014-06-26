@@ -12,7 +12,7 @@ package
 	import starling.utils.RectangleUtil;
 	import starling.utils.ScaleMode;
 	
-	[SWF(frameRate="60"]
+	[SWF(frameRate="60")]
 	public class main extends Sprite
 	{
 		private var mStarling:Starling;
@@ -22,7 +22,6 @@ package
 			var stageWidth:int  = 1024;
 			var stageHeight:int = 768;
 			var iOS:Boolean = Capabilities.manufacturer.indexOf("iOS") != -1;
-			
 			Starling.multitouchEnabled = true;  // useful on mobile devices
 			Starling.handleLostContext = !iOS;  // not necessary on iOS. Saves a lot of memory!
 			

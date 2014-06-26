@@ -8,7 +8,9 @@ package
 	import flash.ui.Keyboard;
 	import flash.utils.Timer;
 	
+	import starling.display.BlendMode;
 	import starling.display.Image;
+	import starling.display.QuadBatch;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.KeyboardEvent;
@@ -21,7 +23,7 @@ package
 	public class Game extends Sprite
 	{
 		private var mCountX:int;
-		private var mCountY:int;
+		private var mCountY:int; 
 		private var mGridWidth:int = 4;
 		private var mGridHeight:int = 4;
 		private var mMaxX:int;
@@ -33,13 +35,9 @@ package
 		private var mStartAY:int;
 		private var mStartBY:int;
 			
-//		private var mBit:Bitmap;
-		private var mBitData:BitmapData;
-		private var mBlockSp:Shape;
-		private var mRender:RenderTexture;
 		
 		private var mPause:Boolean = true;
-		private var mGameOver:Boolean = false;
+		private var _mGameOver:Boolean = false;
 		private var mTowardA:String;
 		private var mTowardB:String;
 		
@@ -53,11 +51,14 @@ package
 		private var mNextBY:int = 0;
 		private var mNextAY:int = 0;
 		
-		private var mSpeed:Number = 20;
+		private var mSpeed:Number = 30;
 		private var mTime:Timer;
 		
 		private var mPositionA:Vector.<Point>;
 		private var mPositionB:Vector.<Point>;
+		
+		private var mBatch:QuadBatch;
+		private var mTexture:Texture;
 		public function Game()
 		{
 			super();
@@ -73,19 +74,34 @@ package
 		
 		private function onAdded(e:Event = null):void
 		{
-			stage.color = 0xCCCCCC;
+//			stage.color = 0xCCCCCC;
+			setBlockTexture();
 			initGridSize();
-//			drawGrid();
-			initStartPoint();
+			drawGrid();
 			restart();
 			touchable = true;
-			addEventListener(TouchEvent.TOUCH, onTouch);
+//			addEventListener(TouchEvent.TOUCH, onTouch);
+			addKeyEvent();
 		}
 		
-		private function onTouch(e:TouchEvent):void
+		private function setBlockTexture():void
 		{
-			e.stopImmediatePropagation();
-			if(e.touches[0].phase == TouchPhase.ENDED)
+			// TODO Auto Generated method stub
+			var sp:Shape = new Shape();
+			var graphics:Graphics = sp.graphics;
+			graphics.clear();
+			graphics.drawRect(0, 0, mGridWidth, mGridHeight);
+			graphics.endFill();
+			var bitdata:BitmapData = new BitmapData(mGridHeight, mGridWidth);
+			bitdata.draw(sp);
+			mTexture = Texture.fromBitmapData(bitdata);
+			bitdata.dispose();
+			bitdata = null;
+		}
+		
+		private function onTouch():void
+		{
+			if(!mGameOver)
 			{
 				mPause = !mPause;
 				if(mPause)
@@ -99,10 +115,9 @@ package
 					if(!mTime)
 					{
 						mTime = new Timer(1000/mSpeed);
-						mTime.addEventListener(TimerEvent.TIMER, onTime);
 					}
+					if(!mTime.hasEventListener(TimerEvent.TIMER))mTime.addEventListener(TimerEvent.TIMER, onTime);
 					mTime.start();
-					addKeyEvent();
 				}
 			}
 		}	
@@ -182,6 +197,10 @@ package
 					{
 						restart();
 					}
+					else
+					{
+						onTouch();
+					}
 					break;
 			}
 		}
@@ -250,7 +269,7 @@ package
 		
 		private function createBlockA(px:int, py:int):void
 		{
-			if(hitWithBlock(px, py))
+			if(checkGameState(px, py))
 			{
 				return;
 			}
@@ -260,7 +279,7 @@ package
 		
 		private function createBlockB(px:int, py:int):void
 		{
-			if(hitWithBlock(px, py))
+			if(checkGameState(px, py))
 			{
 				return;
 			}
@@ -274,8 +293,7 @@ package
 			{
 				if(item.x == px && item.y == py)
 				{
-					mGameOver = true;
-					return mGameOver;
+					return true;
 				}
 			}
 			return false;
@@ -286,42 +304,47 @@ package
 			return contatin(mPositionA, px, py) || contatin(mPositionB, px, py);
 		}
 		
+		
+		private function checkGameState(px:int, py:int):Boolean
+		{
+			if(hitWithBlock(px, py) || outRange(px, py))
+			{
+				mGameOver = true;
+				return mGameOver;
+			}
+			return false;
+		}
 		private function createBlockWithColor(px:int, py:int, color:uint):void
 		{
-			if(!mBitData)
-			{
-				mBitData = new BitmapData(mMaxX - mMinX, mMaxY - mMinY);
-			}
-			var graphics:Graphics;
-			if(!mBlockSp)
-			{
-				mBlockSp = new Shape();
-				graphics = mBlockSp.graphics;
-				graphics.lineStyle();
-			}
-			if(!graphics)graphics = mBlockSp.graphics;
-			graphics.beginFill(color);
-			graphics.drawRect(px * mGridWidth, py * mGridHeight, mGridWidth, mGridHeight);
-			graphics.endFill();
-			
-			mBitData.draw(mBlockSp);
-			var texture:Texture = Texture.fromBitmapData(mBitData);
-			var mBlock:Image = new Image(texture);
-			if(!mRender)
-			{
-				mRender = new RenderTexture(mMaxX - mMinX, mMaxY - mMinY);
-				var mBack:Image = new Image(mRender);
-				addChild(mBack);
-				mBack.dispose();
-			}
-			mRender.draw(mBlock);
-			texture.dispose();
-			mBlock.dispose();
+			createWithTexture(px, py, color);
+//				createWithBitData(px, py, color);
 		}
 		
+		
+		private function createWithTexture(px:int, py:int, color:uint):void
+		{
+			if(!mBatch)
+			{
+				mBatch = new QuadBatch();
+				mBatch.blendMode = BlendMode.MULTIPLY;
+				addChild(mBatch);
+			}
+			var block:Image = new Image(mTexture);
+			block.color = color;
+			block.x = px * mGridWidth;
+			block.y = py * mGridHeight;
+			mBatch.addImage(block);
+			block.dispose();
+			block = null;
+		}
 		private function restart():void
 		{
 			// TODO Auto Generated method stub
+			if(mBatch)
+			{
+				mBatch.reset();
+			}
+			initStartPoint();
 			mTowardA = LEFT;
 			mTowardB = RIGHT;
 			mPause = true;
@@ -332,10 +355,6 @@ package
 			mPositionB.splice(0, mPositionB.length);
 			createBlockA(mStartAX, mStartAY);
 			createBlockB(mStartBX, mStartBY);
-			if(mBlockSp)
-			{
-				mBlockSp.graphics.clear();
-			}
 		}
 		
 		private function initStartPoint():void
@@ -362,10 +381,7 @@ package
 		
 		private function drawGrid():void
 		{
-			if(!mBlockSp)
-			{
-				mBlockSp = new Shape();
-			}
+			var mBlockSp:Shape = new Shape();
 			var graphics:Graphics = mBlockSp.graphics;
 			graphics.clear();
 			graphics.lineStyle(1, 0xCCCCCC);
@@ -383,20 +399,28 @@ package
 				}
 			}
 			graphics.endFill();
-			mBitData = new BitmapData(mMaxX - mMinX, mMaxY - mMinY);
+			var mBitData:BitmapData = new BitmapData(mMaxX - mMinX, mMaxY - mMinY);
 			mBitData.draw(mBlockSp);
 			var texture:Texture = Texture.fromBitmapData(mBitData);
 			var bg:Image = new Image(texture);
-			if(!mRender)
-			{
-				mRender = new RenderTexture(mMaxX - mMinX, mMaxY - mMinY);
-				var mBack:Image = new Image(mRender);
-				addChild(mBack);
-				mBack.dispose();
-			}
-			mRender.draw(bg);
-			bg.dispose();
-			texture.dispose();
+			addChild(bg);
 		}
+
+		private function outRange(px:int, py:int):Boolean
+		{
+			return px * mGridWidth > mMaxX || px * mGridWidth < mMinX || py * mGridHeight > mMaxY || py * mGridHeight < mMinY;
+				
+		}
+		
+		public function get mGameOver():Boolean
+		{
+			return _mGameOver;
+		}
+
+		public function set mGameOver(value:Boolean):void
+		{
+			_mGameOver = value;
+		}
+
 	}
 }
