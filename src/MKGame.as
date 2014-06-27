@@ -1,5 +1,8 @@
 package
 {
+	import com.minko.ui.IDirection;
+	import com.minko.ui.MKDirectionControl;
+	
 	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -20,7 +23,7 @@ package
 	import starling.textures.Texture;
 	import starling.utils.Color;
 	
-	public class Game extends Sprite
+	public class MKGame extends Sprite implements IDirection
 	{
 		private var mCountX:int;
 		private var mCountY:int; 
@@ -59,7 +62,7 @@ package
 		
 		private var mBatch:QuadBatch;
 		private var mTexture:Texture;
-		public function Game()
+		public function MKGame()
 		{
 			super();
 			if(stage)
@@ -74,14 +77,30 @@ package
 		
 		private function onAdded(e:Event = null):void
 		{
-//			stage.color = 0xCCCCCC;
+			
 			setBlockTexture();
 			initGridSize();
-			drawGrid();
+//			drawGrid();
 			restart();
 			touchable = true;
-//			addEventListener(TouchEvent.TOUCH, onTouch);
 			addKeyEvent();
+			initUI();
+		}
+		
+		private function initUI():void
+		{
+			// TODO Auto Generated method stub
+			var control:MKDirectionControl = new MKDirectionControl();
+			control.x = stage.stageWidth - control.width - 20;
+			control.y = stage.stageHeight - control.height - 20;
+			control.directionDelegate = this;
+			addChild(control);
+			
+//			var control:MKDirectionControl = new MKDirectionControl();
+//			control.x = stage.stageWidth - control.width - 20;
+//			control.y = stage.stageHeight - control.height - 20;
+//			control.directionDelegate = this;
+//			addChild(control);
 		}
 		
 		private function setBlockTexture():void
@@ -410,6 +429,23 @@ package
 		{
 			return px * mGridWidth > mMaxX || px * mGridWidth < mMinX || py * mGridHeight > mMaxY || py * mGridHeight < mMinY;
 				
+		}
+		
+		public function towordUp(e:TouchEvent):void
+		{
+			mTowardB = UP;
+		}
+		public function towordDown(e:TouchEvent):void
+		{
+			mTowardB = DOWN;
+		}
+		public function towordLeft(e:TouchEvent):void
+		{
+			mTowardB = LEFT;
+		}
+		public function towordRight(e:TouchEvent):void
+		{
+			mTowardB = RIGHT;
 		}
 		
 		public function get mGameOver():Boolean

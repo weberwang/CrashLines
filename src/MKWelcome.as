@@ -12,9 +12,9 @@ package
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	
-	public class Welcome extends Sprite
+	public class MKWelcome extends Sprite
 	{
-		public function Welcome()
+		public function MKWelcome()
 		{
 			super();
 			if(stage)
@@ -32,12 +32,13 @@ package
 			new MetalWorksMobileTheme();
 			
 			var startBtn:Button = new Button();
+			startBtn.validate();
 			startBtn.name = "button";
 			startBtn.addEventListener(TouchEvent.TOUCH, onTouch);
 			startBtn.alignPivot();
 			startBtn.label = "开始游戏";
-			startBtn.x = stage.stageWidth/2;
-			startBtn.y = stage.stageHeight/2;
+			startBtn.x = stage.stageWidth/2 - startBtn.width/2;
+			startBtn.y = stage.stageHeight/2 - startBtn.height/2;
 			addChild(startBtn);
 		}
 		
@@ -47,7 +48,7 @@ package
 			{
 				var child:DisplayObject = getChildByName("button");
 				child.removeFromParent(true);
-				var game:Game = new Game();
+				var game:MKGame = new MKGame();
 				addChild(game);
 			}
 		}

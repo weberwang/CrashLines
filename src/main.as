@@ -19,8 +19,8 @@ package
 		public function main()
 		{
 			super();
-			var stageWidth:int  = 1024;
-			var stageHeight:int = 768;
+			var stageWidth:int  = 768;
+			var stageHeight:int = 1024;
 			var iOS:Boolean = Capabilities.manufacturer.indexOf("iOS") != -1;
 			Starling.multitouchEnabled = true;  // useful on mobile devices
 			Starling.handleLostContext = !iOS;  // not necessary on iOS. Saves a lot of memory!
@@ -73,7 +73,7 @@ package
 			
 			// launch Starling
 			
-			mStarling = new Starling(Welcome, stage, viewPort);
+			mStarling = new Starling(MKWelcome, stage, viewPort);
 			mStarling.stage.stageWidth  = stageWidth;  // <- same size on all devices!
 			mStarling.stage.stageHeight = stageHeight; // <- same size on all devices!
 			mStarling.simulateMultitouch  = false;
