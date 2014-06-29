@@ -1,9 +1,12 @@
 package
 {
+	import flash.system.Capabilities;
+	
+	import cn.sharesdk.ane.PlatformID;
+	import cn.sharesdk.ane.ShareSDKExtension;
+	
 	import feathers.controls.Button;
 	import feathers.themes.MetalWorksMobileTheme;
-	
-	import flash.system.Capabilities;
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
@@ -33,7 +36,7 @@ package
 			
 			var startBtn:Button = new Button();
 			startBtn.validate();
-			startBtn.name = "button";
+			startBtn.name = "start";
 			startBtn.addEventListener(TouchEvent.TOUCH, onTouch);
 			startBtn.alignPivot();
 			startBtn.label = "开始游戏";
@@ -46,7 +49,7 @@ package
 		{
 			if(e.touches[0].phase == TouchPhase.ENDED)
 			{
-				var child:DisplayObject = getChildByName("button");
+				var child:DisplayObject = getChildByName("start");
 				child.removeFromParent(true);
 				var game:MKGame = new MKGame();
 				addChild(game);

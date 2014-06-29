@@ -1,6 +1,6 @@
 package
 {
-	import com.minko.ui.IDirection;
+	import com.minko.delegate.IDirection;
 	import com.minko.ui.MKDirectionControl;
 	
 	import flash.display.BitmapData;
@@ -8,18 +8,20 @@ package
 	import flash.display.Shape;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
-	import flash.ui.Keyboard;
 	import flash.utils.Timer;
 	
+	import cn.sharesdk.ane.ShareSDKExtension;
+	
+	import feathers.controls.Label;
+	
+	import starling.animation.Tween;
+	import starling.core.Starling;
 	import starling.display.BlendMode;
 	import starling.display.Image;
 	import starling.display.QuadBatch;
 	import starling.display.Sprite;
 	import starling.events.Event;
-	import starling.events.KeyboardEvent;
 	import starling.events.TouchEvent;
-	import starling.events.TouchPhase;
-	import starling.textures.RenderTexture;
 	import starling.textures.Texture;
 	import starling.utils.Color;
 	
@@ -37,9 +39,8 @@ package
 		private var mStartBX:int;
 		private var mStartAY:int;
 		private var mStartBY:int;
-			
 		
-		private var mPause:Boolean = true;
+		
 		private var _mGameOver:Boolean = false;
 		private var mTowardA:String;
 		private var mTowardB:String;
@@ -62,6 +63,8 @@ package
 		
 		private var mBatch:QuadBatch;
 		private var mTexture:Texture;
+		
+		private var GAP:int = 20;
 		public function MKGame()
 		{
 			super();
@@ -77,30 +80,58 @@ package
 		
 		private function onAdded(e:Event = null):void
 		{
-			
 			setBlockTexture();
 			initGridSize();
-//			drawGrid();
 			restart();
 			touchable = true;
-			addKeyEvent();
 			initUI();
+			createStartTip();
+			addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
 		private function initUI():void
 		{
 			// TODO Auto Generated method stub
-			var control:MKDirectionControl = new MKDirectionControl();
-			control.x = stage.stageWidth - control.width - 20;
-			control.y = stage.stageHeight - control.height - 20;
-			control.directionDelegate = this;
-			addChild(control);
+			var controlA:MKDirectionControl = new MKDirectionControl();
+			controlA.name = "A";
+			controlA.x = GAP;
+			controlA.y = stage.stageHeight - controlA.height - GAP;
+			controlA.directionDelegate = this;
+			addChild(controlA);
 			
-//			var control:MKDirectionControl = new MKDirectionControl();
-//			control.x = stage.stageWidth - control.width - 20;
-//			control.y = stage.stageHeight - control.height - 20;
-//			control.directionDelegate = this;
-//			addChild(control);
+			var controlB:MKDirectionControl = new MKDirectionControl();
+			controlB.name = "B";
+			controlB.x = stage.stageWidth - controlB.width - GAP;
+			controlB.y = stage.stageHeight - controlB.height - GAP;
+			controlB.directionDelegate = this;
+			addChild(controlB);
+		}
+		
+		private function createStartTip():void
+		{
+			var timeLbl:Label = new Label();
+			timeLbl.validate();
+			timeLbl.alignPivot();
+			timeLbl.text = "3";
+			timeLbl.x = stage.stageWidth/2;
+			timeLbl.y = stage.stageHeight/2;
+			addChild(timeLbl);
+			
+			var fadeout:Tween = new Tween(timeLbl, 1);
+			fadeout.repeatCount = 3;
+			fadeout.scaleTo(2);
+			fadeout.fadeTo(0);
+			fadeout.onRepeatArgs = [timeLbl];
+			fadeout.onRepeat = function (time:Label):void
+			{
+				time.text = (int(time.text) - 1).toString();
+			};
+			fadeout.onComplete = function (tween:Tween):void{
+				onTouch();
+				Starling.juggler.remove(tween);
+			};
+			fadeout.onCompleteArgs = [fadeout];
+			Starling.juggler.add(fadeout);
 		}
 		
 		private function setBlockTexture():void
@@ -116,129 +147,46 @@ package
 			mTexture = Texture.fromBitmapData(bitdata);
 			bitdata.dispose();
 			bitdata = null;
+		
 		}
 		
-		private function onTouch():void
+		private function onTouch(e:TouchEvent = null):void
 		{
+			if(e)e.stopImmediatePropagation();
 			if(!mGameOver)
 			{
-				mPause = !mPause;
-				if(mPause)
+				if(!mTime)
 				{
-//					removeEnterFrame();
-					if(mTime)mTime.stop();
+					mTime = new Timer(1000/mSpeed);
 				}
-				else if(!mGameOver)
-				{
-//					initEnterFrame();
-					if(!mTime)
-					{
-						mTime = new Timer(1000/mSpeed);
-					}
-					if(!mTime.hasEventListener(TimerEvent.TIMER))mTime.addEventListener(TimerEvent.TIMER, onTime);
-					mTime.start();
-				}
+				if(!mTime.hasEventListener(TimerEvent.TIMER))mTime.addEventListener(TimerEvent.TIMER, onTime);
+				mTime.start();
+			}
+			else
+			{
+				restart();
+				mTime.start();
 			}
 		}	
 		
 		protected function onTime(event:TimerEvent):void
 		{
 			// TODO Auto-generated method stub
-			if(mPause || mGameOver)
+			if(mGameOver)
 			{
 				mTime.stop();
 				mTime.removeEventListener(TimerEvent.TIMER, onTime);
+				mTime = null;
 				return;
 			}
 			onFrame();
 		}
 		
-		private function addKeyEvent():void
-		{
-			// TODO Auto Generated method stub
-			addEventListener(KeyboardEvent.KEY_UP, onKeyUP);
-		}
-		
-		private function onKeyUP(e:KeyboardEvent):void
-		{
-			// TODO Auto Generated method stub
-			e.stopImmediatePropagation();
-			switch(e.keyCode)
-			{
-				case Keyboard.UP:
-					if(mTowardB != DOWN)
-					{
-						mTowardB = UP;
-					}
-					break;
-				case Keyboard.DOWN:
-					if(mTowardB != UP)
-					{
-						mTowardB = DOWN;
-					}
-					break;
-				case Keyboard.LEFT:
-					if(mTowardB != RIGHT)
-					{
-						mTowardB = LEFT;
-					}
-					break;
-				case Keyboard.RIGHT:
-					if(mTowardB != LEFT)
-					{
-						mTowardB = RIGHT;
-					}
-					break;
-				case Keyboard.W:
-					if(mTowardA != DOWN)
-					{
-						mTowardA = UP;
-					}
-					break;
-				case Keyboard.S:
-					if(mTowardA != UP)
-					{
-						mTowardA = DOWN;
-					}
-					break;
-				case Keyboard.A:
-					if(mTowardA != RIGHT)
-					mTowardA = LEFT;
-					break;
-				case Keyboard.D:
-					if(mTowardA != LEFT)
-					{
-						mTowardA = RIGHT;
-					}
-					break;
-				case Keyboard.SPACE:
-					if(mGameOver)
-					{
-						restart();
-					}
-					else
-					{
-						onTouch();
-					}
-					break;
-			}
-		}
-		
-		private function removeEnterFrame():void
-		{
-			// TODO Auto Generated method stub
-			removeEventListener(Event.ENTER_FRAME, onFrame);
-		}
-		
-		private function initEnterFrame():void
-		{
-			addEventListener(Event.ENTER_FRAME, onFrame);
-		}
 		
 		private function onFrame(e:Event = null):void
 		{
 			// TODO Auto Generated method stub
-			if(mPause) return;
+			if(mGameOver) return;
 			switch(mTowardA)
 			{
 				case LEFT:
@@ -328,6 +276,7 @@ package
 		{
 			if(hitWithBlock(px, py) || outRange(px, py))
 			{
+				addEventListener(TouchEvent.TOUCH, onTouch);
 				mGameOver = true;
 				return mGameOver;
 			}
@@ -336,7 +285,7 @@ package
 		private function createBlockWithColor(px:int, py:int, color:uint):void
 		{
 			createWithTexture(px, py, color);
-//				createWithBitData(px, py, color);
+			//				createWithBitData(px, py, color);
 		}
 		
 		
@@ -366,7 +315,6 @@ package
 			initStartPoint();
 			mTowardA = LEFT;
 			mTowardB = RIGHT;
-			mPause = true;
 			mGameOver = false;
 			if(!mPositionA)mPositionA = new Vector.<Point>();
 			mPositionA.splice(0, mPositionA.length);
@@ -398,65 +346,78 @@ package
 			mMaxY = stage.stageHeight - height/2;
 		}
 		
-		private function drawGrid():void
-		{
-			var mBlockSp:Shape = new Shape();
-			var graphics:Graphics = mBlockSp.graphics;
-			graphics.clear();
-			graphics.lineStyle(1, 0xCCCCCC);
-			for (var i:int = 0; i < mCountY + mCountX; i++) 
-			{
-				if(i < mCountY)
-				{
-					graphics.moveTo(mMinX, mMinY + i * mGridHeight);
-					graphics.lineTo(mMaxX, mMinY + i * mGridHeight);
-				}
-				else
-				{
-					graphics.moveTo(mMinX + (i - mCountY) * mGridWidth, mMinY);
-					graphics.lineTo(mMinX + (i - mCountY) * mGridWidth, mMaxY);
-				}
-			}
-			graphics.endFill();
-			var mBitData:BitmapData = new BitmapData(mMaxX - mMinX, mMaxY - mMinY);
-			mBitData.draw(mBlockSp);
-			var texture:Texture = Texture.fromBitmapData(mBitData);
-			var bg:Image = new Image(texture);
-			addChild(bg);
-		}
-
+		
 		private function outRange(px:int, py:int):Boolean
 		{
 			return px * mGridWidth > mMaxX || px * mGridWidth < mMinX || py * mGridHeight > mMaxY || py * mGridHeight < mMinY;
-				
+			
 		}
 		
 		public function towordUp(e:TouchEvent):void
 		{
-			mTowardB = UP;
+			switch(getTargetName(e))
+			{
+				case "A":
+					mTowardA = UP;
+					break;
+				case "B":
+					mTowardB = UP;
+					break;
+			}
 		}
 		public function towordDown(e:TouchEvent):void
 		{
-			mTowardB = DOWN;
+			switch(getTargetName(e))
+			{
+				case "A":
+					mTowardA = DOWN;
+					break;
+				case "B":
+					mTowardB = DOWN;
+					break;
+			}
 		}
 		public function towordLeft(e:TouchEvent):void
 		{
-			mTowardB = LEFT;
+			switch(getTargetName(e))
+			{
+				case "A":
+					mTowardA = LEFT;
+					break;
+				case "B":
+					mTowardB = LEFT;
+					break;
+			}
 		}
 		public function towordRight(e:TouchEvent):void
 		{
-			mTowardB = RIGHT;
+			switch(getTargetName(e))
+			{
+				case "A":
+					mTowardA = RIGHT;
+					break;
+				case "B":
+					mTowardB = RIGHT;
+					break;
+			}
+		}
+		
+		public function getTargetName(e:TouchEvent):String
+		{
+			e.stopImmediatePropagation();
+			var direction:MKDirectionControl = e.currentTarget as MKDirectionControl;
+			return direction.name;
 		}
 		
 		public function get mGameOver():Boolean
 		{
 			return _mGameOver;
 		}
-
+		
 		public function set mGameOver(value:Boolean):void
 		{
 			_mGameOver = value;
 		}
-
+		
 	}
 }

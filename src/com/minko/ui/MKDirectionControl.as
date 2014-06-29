@@ -1,14 +1,16 @@
 package com.minko.ui
 {
-	import feathers.controls.Button;
+	import com.minko.delegate.IDirection;
 	
 	import flash.geom.Point;
 	
+	import feathers.controls.Button;
+	
 	import starling.display.Sprite;
-	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	
 	
 	public class MKDirectionControl extends Sprite
 	{
@@ -17,56 +19,96 @@ package com.minko.ui
 		private var mDownButton:Button;
 		private var mLeftButton:Button;
 		private var mRightButton:Button;
+		private const GAP:int = 20;
+		private var _isTop:Boolean = false;
 		
 		public var directionDelegate:IDirection;
 		public function MKDirectionControl()
 		{
 			super();
 			initView();
-			addEventListener(Event.ADDED_TO_STAGE, onAdded);
-		}
-		
-		private function onAdded():void
-		{
-			// TODO Auto Generated method stub
-			mUpButton.x = mUpButton.width;
-			mUpButton.y = 0;
 		}
 		
 		private function initView():void
 		{
+			this.alpha = 0.3;
 			mUpButton = new Button();
+			mUpButton.scaleX = 2;
+			mUpButton.scaleY = 2;
 			mUpButton.validate();
 			mUpButton.label = "↑";
-			mUpButton.x = mUpButton.width;
-			mUpButton.y = 0;
+			
 			
 			mDownButton = new Button();
+			mDownButton.scaleX = 2;
+			mDownButton.scaleY = 2;
 			mDownButton.validate();
 			mDownButton.label = "↓";
-			mDownButton.x = mDownButton.width;
-			mDownButton.y = mUpButton.height;
+			
 			
 			mLeftButton = new Button();
+			mLeftButton.scaleX = 2;
+			mLeftButton.scaleY = 2;
 			mLeftButton.validate();
 			mLeftButton.label = "←"
-			mLeftButton.x = 0;
-			mLeftButton.y = mUpButton.height;
+			
 		
 			mRightButton = new Button();
+			mRightButton.scaleX = 2;
+			mRightButton.scaleY = 2;
 			mRightButton.validate();
 			mRightButton.label = "→";
-			mRightButton.x = mRightButton.width * 2;
-			mRightButton.y = mRightButton.height;
-			
 			
 			addChild(mUpButton);
 			addChild(mDownButton);
 			addChild(mLeftButton);
 			addChild(mRightButton);
-			
-			
+			setBottomLayout();
 			initEvents();
+		}
+		
+		public function set isTop(value:Boolean):void
+		{
+			if(_isTop == value) return;
+			_isTop = value;
+			if(_isTop)
+			{
+				setTopLayout();
+			}
+			else
+			{
+				setBottomLayout();
+			}
+		}
+		
+		private function setBottomLayout():void
+		{
+			mUpButton.x = mUpButton.width + GAP;
+			mUpButton.y = 0;
+			
+			mDownButton.x = mUpButton.width + GAP;
+			mDownButton.y = mUpButton.height + GAP;
+			
+			mLeftButton.x = 0;
+			mLeftButton.y = mUpButton.height + GAP;
+			
+			mRightButton.x = (mUpButton.width + GAP) * 2;
+			mRightButton.y = mUpButton.height + GAP;
+		}
+		
+		private function setTopLayout():void
+		{
+			mUpButton.x = mUpButton.width + GAP;
+			mUpButton.y = 0;
+			
+			mDownButton.x = mUpButton.width + GAP;
+			mDownButton.y = mUpButton.height + GAP;
+			
+			mLeftButton.x = 0;
+			mLeftButton.y = 0;
+			
+			mRightButton.x = (mUpButton.width + GAP) * 2;
+			mRightButton.y = 0;
 		}
 		
 		private function initEvents():void
@@ -99,5 +141,11 @@ package com.minko.ui
 				}
 			}
 		}
+
+		public function get isTop():Boolean
+		{
+			return _isTop;
+		}
+
 	}
 }
